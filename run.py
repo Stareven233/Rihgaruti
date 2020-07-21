@@ -1,14 +1,14 @@
 import torch
-from model import Net
-from config import run_set_dir, transform
-import os
-import random
-from PIL import Image
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-model_dir = './model.pkl'
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+from model import Net
+from config import Config
+import os
+import random
+from PIL import Image
+
+device = Config.device
 sample_num = 3
 # input_file 文件路径列表(list)，跟get_samples返回值同样
 # input_file = ['./data/neko1.jpg']
@@ -36,17 +36,17 @@ def file_handle(file_list):
     """
 
     img = [Image.open(f) for f in file_list]
-    img_tensor = [transform(i) for i in img]
+    img_tensor = [Config.transform(i) for i in img]
     img_tensor = torch.stack(img_tensor, dim=0)
     return img, img_tensor
 
 
 def run(model):
-    model.load_state_dict(torch.load(model_dir))
+    model.load_state_dict(torch.load(Config.model_dir))
     model.eval()
     print("模型加载完成")
 
-    files = input_file or get_samples(run_set_dir, sample_num)
+    files = input_file or get_samples(Config.run_set_dir, sample_num)
     raw_img, inputs = file_handle(files)
     inputs = inputs.to(device)
     print("数据加载完成")
@@ -55,8 +55,10 @@ def run(model):
     outputs = F.softmax(outputs, dim=1)
 
     for i, out in enumerate(outputs):
+        # plt.figure、plt.show是为了使所有图片都能一起显示
         plt.figure()
         label = ('cat', 'dog', )[out[0] < out[1]]
+
         print(f"Sample{i}: This is a {label}", end=', ')
         print("cat: {:.2%}, dog: {:.2%}".format(*out))
         plt.imshow(raw_img[i])

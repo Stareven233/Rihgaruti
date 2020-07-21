@@ -9,28 +9,26 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
 from model import Net
-from config import train_set_dir, batch_size, transform
-from config import valid_train, valid_dev
+from config import Config
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-lr = 1e-3
-num_epoch = 10
-num_workers = 0
-model_dir = './model.pkl'
+
+device = Config.device
+num_workers = Config.num_workers
+batch_size = Config.batch_size
 
 
 def train(model):
-    train_set = ImageFolder(root=train_set_dir, transform=transform, is_valid_file=valid_train)
+    train_set = ImageFolder(root=Config.train_set_dir, transform=Config.transform, is_valid_file=Config.valid_train)
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
     print("数据集加载完成")
 
     model.train()
-    # model = torch.nn.DataParallel(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    # model = torch.nn.DataParallel(model)  # 只有一个GPU(cuda)，没必要
+    optimizer = torch.optim.Adam(model.parameters(), lr=Config.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
 
     print("进入epoch循环中...")
-    for e in range(num_epoch):
+    for e in range(Config.num_epoch):
         # 每次循环完整训练一次数据集
         for i, (inputs, labels) in enumerate(train_loader):
             # 每次循环训练一个batch
@@ -44,18 +42,18 @@ def train(model):
             optimizer.step()
 
             if i % 50 == 0:
-                print(f'Epoch: {e}, Loss: {loss/batch_size}')
+                print(f'Epoch: {e}, Loop: {i}, Loss: {loss/batch_size}')
 
-    torch.save(model.state_dict(), model_dir)
-    print("模型以保存：", model_dir)
+    torch.save(model.state_dict(), Config.model_dir)
+    print("模型已保存：", Config.model_dir)
 
 
 def validate(model):
-    dev_set = ImageFolder(root=train_set_dir, transform=transform, is_valid_file=valid_dev)
-    dev_loader = DataLoader(dev_set, batch_size=16, shuffle=True, num_workers=num_workers, drop_last=True)
+    dev_set = ImageFolder(root=Config.train_set_dir, transform=Config.transform, is_valid_file=Config.valid_dev)
+    dev_loader = DataLoader(dev_set, batch_size=32, shuffle=True, num_workers=num_workers, drop_last=True)
     print("数据集加载完成")
 
-    model.load_state_dict(torch.load(model_dir))
+    model.load_state_dict(torch.load(Config.model_dir))
     model.eval()
     print("模型加载完成")
 
@@ -78,7 +76,7 @@ def validate(model):
         correct += (pred == labels.view_as(pred)).sum().item()
 
         if i % 50 == 0:
-            print(f'Total: {total}, Correct: {correct}')
+            print(f'Loop: {i}, Total: {total}, Correct: {correct}')
 
     print(f"开发集上的准确度：{100 * (correct/total)}%")
     # 第一次的：开发集上的准确度：75.53999999999999%
@@ -87,7 +85,7 @@ def validate(model):
 if __name__ == '__main__':
     net = Net().to(device)
 
-    print("training...")
-    train(net)
+    # print("training...")
+    # train(net)
     print("validating...")
     validate(net)
