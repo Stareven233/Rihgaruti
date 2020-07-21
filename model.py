@@ -26,11 +26,8 @@ class Net(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
-        # todo 开启mini-batch时x是什么结构？
-
-        # 将x变为全连接层所需的 (16, 32*32*16) 向量，但或许该写成view(1, -1)？
+        # 将x变为全连接层所需的 (16, 16*32*32) 向量，因为一个batch有16张图
         x = x.view(x.shape[0], -1)
-        # x = x.view(1, -1)  # 导致下一行fc1报错
 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
