@@ -9,7 +9,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
 from model import Net
-from config import root, batch_size, transform
+from config import train_set_dir, batch_size, transform
 from config import valid_train, valid_dev
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -20,7 +20,7 @@ model_dir = './model.pkl'
 
 
 def train(model):
-    train_set = ImageFolder(root=root, transform=transform, is_valid_file=valid_train)
+    train_set = ImageFolder(root=train_set_dir, transform=transform, is_valid_file=valid_train)
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
     print("数据集加载完成")
 
@@ -37,7 +37,8 @@ def train(model):
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
 
-            outputs = model(inputs)  # batch_size=16时，outputs.shape=[16, 2]
+            # batch_size=16时，outputs.shape=[16, 2]
+            outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -50,7 +51,7 @@ def train(model):
 
 
 def validate(model):
-    dev_set = ImageFolder(root=root, transform=transform, is_valid_file=valid_dev)
+    dev_set = ImageFolder(root=train_set_dir, transform=transform, is_valid_file=valid_dev)
     dev_loader = DataLoader(dev_set, batch_size=16, shuffle=True, num_workers=num_workers, drop_last=True)
     print("数据集加载完成")
 
@@ -86,7 +87,7 @@ def validate(model):
 if __name__ == '__main__':
     net = Net().to(device)
 
-    # print("training...")
-    # train(net)
+    print("training...")
+    train(net)
     print("validating...")
     validate(net)

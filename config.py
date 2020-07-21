@@ -1,13 +1,15 @@
 from torchvision import transforms
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader, dataset
 
 import random
 import re
 
 
-root = './data/train'
+train_set_dir = './data/train'
+run_set_dir = './data/test1'
 img_size = 128
 batch_size = 16
-num_workers = 2
 
 transform = transforms.Compose([
     transforms.Resize(img_size),  # 保持比例，将短边放缩为IMG_SIZE
