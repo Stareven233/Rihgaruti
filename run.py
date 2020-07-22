@@ -3,12 +3,12 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
 from model import Net
-from config import Config
+import config
+from config import device
 import os
 import random
 from PIL import Image
 
-device = Config.device
 sample_num = 3
 # input_file 文件路径列表(list)，跟get_samples返回值同样
 # input_file = ['./data/neko1.jpg']
@@ -23,6 +23,8 @@ def get_samples(data_dir, num):
     :return: 文件路径列表
     """
 
+    # 重新设定随机种子，覆盖掉config中设置的固定顺序
+    random.seed()
     samples = random.sample(os.listdir(data_dir), num)
     sample_list = [os.path.join(data_dir, s) for s in samples]
     return sample_list
@@ -36,17 +38,19 @@ def file_handle(file_list):
     """
 
     img = [Image.open(f) for f in file_list]
-    img_tensor = [Config.transform(i) for i in img]
+    # config.transform是个函数，返回transform
+    img_tensor = [config.transform()(i) for i in img]
     img_tensor = torch.stack(img_tensor, dim=0)
     return img, img_tensor
 
 
 def run(model):
-    model.load_state_dict(torch.load(Config.model_dir))
+    model.load_state_dict(torch.load(config.model_dir))
+    model.to(device)
     model.eval()
     print("模型加载完成")
 
-    files = input_file or get_samples(Config.run_set_dir, sample_num)
+    files = input_file or get_samples(config.run_set_dir, sample_num)
     raw_img, inputs = file_handle(files)
     inputs = inputs.to(device)
     print("数据加载完成")
@@ -66,6 +70,6 @@ def run(model):
 
 
 if __name__ == '__main__':
-    net = Net().to(device)
     print("running...")
-    run(net)
+    # run(Net())  # 自己写的简陋网络
+    run(config.custom_res_model())  # 以ResNet18为基础的网络

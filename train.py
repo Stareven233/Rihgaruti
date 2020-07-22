@@ -5,35 +5,34 @@
 
 import torch
 import torch.nn.functional as F
-from torchvision.datasets import ImageFolder
-from torch.utils.data import DataLoader
+from torchvision import models
 
 from model import Net
-from config import Config
+import config
+from config import device
 
 
-device = Config.device
-num_workers = Config.num_workers
-batch_size = Config.batch_size
-
-
-def train(model):
-    train_set = ImageFolder(root=Config.train_set_dir, transform=Config.transform, is_valid_file=Config.valid_train)
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
-    print("数据集加载完成")
-
+def train(model=None, data_loader=None):
+    if model is None:
+        model = Net()
+        print("模型加载完成")
+    model.to(device)
     model.train()
     # model = torch.nn.DataParallel(model)  # 只有一个GPU(cuda)，没必要
-    criterion = torch.nn.CrossEntropyLoss()
 
+    if data_loader is None:
+        data_loader = config.train_loader()
+        print("数据集加载完成")
+
+    criterion = torch.nn.CrossEntropyLoss()
     # Adam: epoch 10次略低于1次的...而SGD 10次明显好于1次
-    optimizer = torch.optim.Adam(model.parameters(), lr=Config.learning_rate)
-    # optimizer = torch.optim.SGD(model.parameters(), lr=Config.learning_rate, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=config.learning_rate, momentum=0.9)
 
     print("进入epoch循环中...")
-    for e in range(Config.num_epoch):
+    for e in range(config.num_epoch):
         # 每次循环完整训练一次数据集
-        for i, (inputs, labels) in enumerate(train_loader):
+        for i, (inputs, labels) in enumerate(data_loader):
             # 每次循环训练一个batch
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
@@ -47,25 +46,41 @@ def train(model):
             if i % 50 == 0:
                 print(f'Epoch: {e}, Loop: {i}, Loss: {loss}')
 
-    torch.save(model.state_dict(), Config.model_dir)
-    print("模型已保存：", Config.model_dir)
+    torch.save(model.state_dict(), config.model_dir)
+    print("模型已保存：", config.model_dir)
 
 
-def validate(model):
-    dev_set = ImageFolder(root=Config.train_set_dir, transform=Config.transform, is_valid_file=Config.valid_dev)
-    dev_loader = DataLoader(dev_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
-    print("数据集加载完成")
+def train_resnet18():
+    print("ResNet18模型加载开始")
+    # 此处修改了 torchvison.models.resnet里_resnet的代码，指定了load_state_dict_from_url的参数model_dir
+    model = models.resnet18(pretrained=True)  # 直接用, num_classes=2 会与已训练模型的w, b参数size冲突
+    model.fc = torch.nn.Linear(512, 2)
+    print("ResNet18模型加载完成")
 
-    model.load_state_dict(torch.load(Config.model_dir))
+    data_loader = config.train_res_loader()
+    print("ResNet18数据集加载完成")
+
+    train(model, data_loader)
+
+
+def validate(model=None, data_loader=None):
+    if model is None:
+        model = Net()
+        model.load_state_dict(torch.load(config.model_dir))
+        print("模型加载完成")
+    model.to(device)
     model.eval()
-    print("模型加载完成")
+
+    if data_loader is None:
+        data_loader = config.dev_loader()
+        print("数据集加载完成")
 
     # len(dev_loader)是batch的个数，len(dev_set)是完整数据数，但由于drop_last的存在还是得自己统计
     total = 0
     correct = 0
 
     print("进入predicate循环中...")
-    for i, (inputs, labels) in enumerate(dev_loader):
+    for i, (inputs, labels) in enumerate(data_loader):
         inputs, labels = inputs.to(device), labels.to(device)
         outputs = model(inputs)
         outputs = F.softmax(outputs, dim=1)
@@ -85,11 +100,21 @@ def validate(model):
     # 第一次的：开发集上的准确度：75.53999999999999%
 
 
+def validate_resnet18():
+    model = config.custom_res_model()
+    model.load_state_dict(torch.load(config.model_dir))
+    print("ResNet18模型加载完成")
+
+    validate(model)
+    # 开发集上的准确度(ResNet18)：91.96714743589743%
+
+
 if __name__ == '__main__':
-    net = Net().to(device)
 
     # print("training...")
-    # train(net)
+    # train()
+    # train_resnet18()
 
     print("validating...")
-    validate(net)
+    # validate()
+    validate_resnet18()
