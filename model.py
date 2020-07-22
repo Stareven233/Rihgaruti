@@ -9,11 +9,13 @@ class Net(nn.Module):
         # 两个卷积层，通过padding使得卷积(仅池化时/2)后图片尺寸不变
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 6, 3, padding=1),
+            # nn.BatchNorm2d(6),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
         )
         self.conv2 = nn.Sequential(
             nn.Conv2d(6, 16, 3, padding=1),
+            # nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
         )

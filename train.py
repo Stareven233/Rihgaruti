@@ -24,8 +24,11 @@ def train(model):
 
     model.train()
     # model = torch.nn.DataParallel(model)  # 只有一个GPU(cuda)，没必要
-    optimizer = torch.optim.Adam(model.parameters(), lr=Config.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
+
+    # Adam: epoch 10次略低于1次的...而SGD 10次明显好于1次
+    optimizer = torch.optim.Adam(model.parameters(), lr=Config.learning_rate)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=Config.learning_rate, momentum=0.9)
 
     print("进入epoch循环中...")
     for e in range(Config.num_epoch):
@@ -42,7 +45,7 @@ def train(model):
             optimizer.step()
 
             if i % 50 == 0:
-                print(f'Epoch: {e}, Loop: {i}, Loss: {loss/batch_size}')
+                print(f'Epoch: {e}, Loop: {i}, Loss: {loss}')
 
     torch.save(model.state_dict(), Config.model_dir)
     print("模型已保存：", Config.model_dir)
@@ -50,7 +53,7 @@ def train(model):
 
 def validate(model):
     dev_set = ImageFolder(root=Config.train_set_dir, transform=Config.transform, is_valid_file=Config.valid_dev)
-    dev_loader = DataLoader(dev_set, batch_size=32, shuffle=True, num_workers=num_workers, drop_last=True)
+    dev_loader = DataLoader(dev_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
     print("数据集加载完成")
 
     model.load_state_dict(torch.load(Config.model_dir))
@@ -87,5 +90,6 @@ if __name__ == '__main__':
 
     # print("training...")
     # train(net)
+
     print("validating...")
     validate(net)

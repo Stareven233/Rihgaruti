@@ -9,12 +9,14 @@ class Config(object):
     train_set_dir = './data/train'
     run_set_dir = './data/test1'
 
+    # 过大过小都会降低准确率
     batch_size = 32
-    learning_rate = 0.00015
+    # 太小的话似乎会因为太慢&epoch次数不够而训练不充分
+    learning_rate = 0.001
+    num_epoch = 10
     num_workers = 0
-    num_epoch = 1
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_dir = './model.pkl'
 
     img_size = 128
@@ -26,8 +28,10 @@ class Config(object):
     ])
 
     train_data_size = 12500
-    random_dev_list = random.sample(range(train_data_size), int(train_data_size*0.2))
+    # 保证每次划分的训练/开发集都一样
+    random.seed('Rihgaruti')
     # 即每个class各随机2500张(20%)作开发集，剩下的全部作为训练集
+    random_dev_list = random.sample(range(train_data_size), int(train_data_size*0.2))
 
     @staticmethod
     def valid_dev(path):
