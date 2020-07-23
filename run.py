@@ -71,5 +71,5 @@ def run(model):
 
 if __name__ == '__main__':
     print("running...")
-    # run(Net())  # 自己写的简陋网络
-    run(config.custom_res_model())  # 以ResNet18为基础的网络
+    run(Net())  # 自己写的简陋网络
+    # run(config.custom_res_model())  # 以ResNet18为基础的网络

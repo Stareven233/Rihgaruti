@@ -111,10 +111,10 @@ def validate_resnet18():
 
 if __name__ == '__main__':
 
-    # print("training...")
-    # train()
+    print("training...")
+    train()
     # train_resnet18()
 
     print("validating...")
-    # validate()
-    validate_resnet18()
+    validate()
+    # validate_resnet18()
