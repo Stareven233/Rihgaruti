@@ -23,6 +23,7 @@ LEN_OF_LINE = 100
 SPLIT_FRAC = 0.8
 BATCH_SIZE = 32
 NUM_WORKER = 0
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ch_punc = r"！？｡。＂＃＄％＆＇（）＊＋，－―／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
 pattern = r"(回复)?@.*?[\s:：]|[\s"  # 去掉@与空白部分
@@ -59,12 +60,6 @@ for i, review in enumerate(reviews_cut):
     reviews_int[i, -len(r):] = r
 # 把所有评论的每个词都用对应整数替代，并填充至固定长度
 
-# print('单词总数: ', len(vocab_to_int))  # 160162
-# print('编码后第一句评论: \n', reviews_int[0])
-# review_len = sorted([len(x) for x in reviews_int])
-# print('最短5个', review_len[:5])  # [1, 1, 1, 1, 1]
-# print('最长5个', review_len[-5:])  # [88, 89, 91, 93, 130]
-
 # np.random.shuffle(reviews_int)
 split_idx = int(reviews_int.shape[0]*SPLIT_FRAC)
 train_x, remain_x = reviews_int[:split_idx], reviews_int[split_idx:]
@@ -83,3 +78,10 @@ train_loader = DataLoader(train_data, shuffle=True, batch_size=BATCH_SIZE, num_w
 val_loader = DataLoader(val_data, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKER)
 test_loader = DataLoader(test_data, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKER)
 # 准备DataLoader
+
+if __name__ == '__main__':
+    print('单词总数: ', len(vocab_to_int))  # 160162
+    print('编码后第一句评论: \n', reviews_int[0])
+    review_len = sorted([len(x) for x in reviews_int])
+    print('最短5个', review_len[:5])  # [1, 1, 1, 1, 1]
+    print('最长5个', review_len[-5:])  # [88, 89, 91, 93, 130]
