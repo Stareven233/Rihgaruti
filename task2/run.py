@@ -2,9 +2,9 @@ import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-from model import Net
-import config
-from config import device
+from .model import Net
+from . import config
+from .config import device
 import os
 import random
 from PIL import Image

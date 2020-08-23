@@ -1,6 +1,6 @@
 import pandas as pd
 
-path = './weibo_senti_100k.csv'
+path = 'data/weibo_senti_100k.csv'
 pd_all = pd.read_csv(path)
 
 print('评论数目（总体）：%d' % pd_all.shape[0])
