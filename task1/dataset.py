@@ -17,22 +17,23 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch
 
 
-path = 'data/weibo_senti_100k.csv'
-pd_all = pd.read_csv(path, encoding='utf-8-sig')
+data_path = './data/weibo_senti_100k.csv'
+model_dir = './model/model.pth'
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LEN_OF_LINE = 100
 SPLIT_FRAC = 0.8
-BATCH_SIZE = 32
+BATCH_SIZE = 1
 NUM_WORKER = 0
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ch_punc = r"！？｡。＂＃＄％＆＇（）＊＋，－―／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
 pattern = r"(回复)?@.*?[\s:：]|[\s"  # 去掉@与空白部分
 pattern += ch_punc+r"""!"#$%&'()*+,-./:;<=>?@\[\\\]^_`{|}~]"""  # 去标点符号等特殊字符
 
+pd_all = pd.read_csv(data_path)
 words_cnt = dict()
 reviews_cut = []
 
-for review in pd_all['review']:
+for review in pd_all['review'][:4]:
     r = re.sub(pattern, '', review)
     r = r.encode().decode('utf-8-sig').lower()  # 去掉字节顺序标记BOM \ufeff
     r = list(jieba.cut(r))[:LEN_OF_LINE]
@@ -46,12 +47,15 @@ for review in pd_all['review']:
             words_cnt[c] = cnt[c]
 # 计算每个词的频数
 
+labels_int = np.array(pd_all['label'][:4])
+# 对应的标签
+print("input data loaded")
+
 vocab = sorted(words_cnt, key=words_cnt.get, reverse=True)
 vocab_to_int = {word: i for i, word in enumerate(vocab, 1)}
 # 按频数编号，频数大的编码小
-
-labels_int = np.array(pd_all['label'][:])
-# 对应的标签
+VOCAB_SIZE = len(vocab_to_int) + 1
+# +1是考虑到评论前填充的0
 
 reviews_int = np.zeros(shape=(len(reviews_cut), LEN_OF_LINE), dtype=int)
 for i, review in enumerate(reviews_cut):
@@ -78,10 +82,20 @@ train_loader = DataLoader(train_data, shuffle=True, batch_size=BATCH_SIZE, num_w
 val_loader = DataLoader(val_data, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKER)
 test_loader = DataLoader(test_data, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKER)
 # 准备DataLoader
+print("DataLoader ready")
+
+del pd_all
+del words_cnt, reviews_cut
+del vocab, vocab_to_int
+del reviews_int, labels_int
+del train_x, remain_x, train_y, remain_y
+del val_x, test_x, val_y, test_y
+del train_data, val_data, test_data
+# 似乎没有差别...
 
 if __name__ == '__main__':
-    print('单词总数: ', len(vocab_to_int))  # 160162
-    print('编码后第一句评论: \n', reviews_int[0])
-    review_len = sorted([len(x) for x in reviews_int])
-    print('最短5个', review_len[:5])  # [1, 1, 1, 1, 1]
-    print('最长5个', review_len[-5:])  # [88, 89, 91, 93, 130]
+    print('单词总数: ', VOCAB_SIZE-1)  # 160162
+    # print('编码后第一句评论: \n', reviews_int[0])
+    # review_len = sorted([len(x) for x in reviews_int])
+    # print('最短5个', review_len[:5])  # [1, 1, 1, 1, 1]
+    # print('最长5个', review_len[-5:])  # [88, 89, 91, 93, 130]
