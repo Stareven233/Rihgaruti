@@ -53,5 +53,5 @@ if __name__ == '__main__':
     print("predicting...")
     # text = input('输入一句评论：')是
     # 若用input接收输入会在加载model时蓝屏
-    text = '求整个工程和数据集，感激不尽'
+    text = '求整个工程和数据集，感激不尽'  # 长度不可超出100
     predict(net, text)

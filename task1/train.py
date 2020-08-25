@@ -70,17 +70,19 @@ def val_test(model, data_loader, load_model=False):
 
     print(f"准确度：{100 * (correct/total)}%")
     print(f"Loss：{np.mean(losses)}%")
-    # first val: 准确度：92.02874331550802% and Loss：0.169401148444958%
-    # first test: 准确度：92.1457219251337% and Loss：0.17519030125966087%
+    # epoch2 val: 准确度：92.02874331550802% Loss：0.169401148444958%
+    # epoch2 test: 准确度：92.1457219251337% Loss：0.17519030125966087%
+    # epoch4 val: 准确度：96.17312834224599% Loss：0.15977212345416852%
+    # epoch4 test: 准确度：96.62433155080214% Loss：0.16094146649487676%
 
 
 if __name__ == '__main__':
     net = Net(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_DIM, N_LAYERS, BIDIRECTIONAL).to(device)
-    # print("training...")
-    # train(net, train_loader)
-    #
-    # print("validating...")
-    # val_test(net, val_loader)
+    print("training...")
+    train(net, train_loader)
+
+    print("validating...")
+    val_test(net, val_loader)
 
     print("testing...")
     val_test(net, test_loader, True)

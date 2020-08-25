@@ -13,7 +13,7 @@ model_dir = 'model/model.pth'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 LEN_OF_LINE = 100
 SPLIT_FRAC = 0.8
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 NUM_WORKER = 0
 
 ch_punc = r"！？｡。＂＃＄％＆＇（）＊＋，－―／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
