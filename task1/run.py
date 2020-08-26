@@ -7,6 +7,7 @@ from model import Net
 from dataset import pattern, LEN_OF_LINE, vocab_to_int
 from dataset import device, model_dir, VOCAB_SIZE, BATCH_SIZE
 from train import EMBEDDING_DIM, HIDDEN_DIM, N_LAYERS, BIDIRECTIONAL
+# 由于需要vocab_to_int，每次都要重新加载数据，很慢
 
 
 def tokenize(review):
@@ -22,7 +23,8 @@ def tokenize(review):
     # print(r)
 
     review_int = np.zeros(shape=(LEN_OF_LINE,), dtype=int)
-    r = [vocab_to_int[w] for w in r]
+    r = [vocab_to_int.get(w, 0) for w in r]
+    # 若出现生词则以0代替
     review_int[-len(r):] = r
 
     return torch.from_numpy(review_int)
@@ -45,7 +47,8 @@ def predict(model, review):
     output, h = model(review_tensor.unsqueeze(0), h)
     # 作为输入的review_tensor.shape应为[1, n]
     pred = int(output.round().item())
-    print(f"{('Negative', 'Positive')[pred]} emotion #{output.item()}")
+    print(f"Result: {('negative', 'positive')[pred]} emotion")
+    print(f"Sigmoid Out: {output.item()}")
 
 
 if __name__ == '__main__':
@@ -53,5 +56,6 @@ if __name__ == '__main__':
     print("predicting...")
     # text = input('输入一句评论：')是
     # 若用input接收输入会在加载model时蓝屏
-    text = '求整个工程和数据集，感激不尽'  # 长度不可超出100
+    text = '感动感动。给我加鸡腿吧！看到自己动捕的作品能得到大家的认可，真心感动！期待正式上线！'
+    # 长度不可超出100
     predict(net, text)
