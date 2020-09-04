@@ -2,12 +2,16 @@ import re
 import jieba
 import numpy as np
 import torch
+import pickle
 
 from model import Net
-from dataset import pattern, LEN_OF_LINE, vocab_to_int
-from dataset import device, model_dir, VOCAB_SIZE, BATCH_SIZE
-from train import EMBEDDING_DIM, HIDDEN_DIM, N_LAYERS, BIDIRECTIONAL
-# 由于需要vocab_to_int，每次都要重新加载数据，很慢
+import config as cf
+
+
+with open(cf.VOCAB_TO_INT_PTH, 'rb') as f:
+    vocab_to_int = pickle.load(f)
+with open(cf.VOCAB_SIZE_PTH, 'rb') as f:
+    VOCAB_SIZE = pickle.load(f)
 
 
 def tokenize(review):
@@ -17,12 +21,12 @@ def tokenize(review):
     :return: Tensor格式的编码序列
     """
 
-    r = re.sub(pattern, '', review)
+    r = re.sub(cf.pattern, '', review)
     r = r.lower()
-    r = list(jieba.cut(r))[:LEN_OF_LINE]
+    r = list(jieba.cut(r))[:cf.LEN_OF_LINE]
     # print(r)
 
-    review_int = np.zeros(shape=(LEN_OF_LINE,), dtype=int)
+    review_int = np.zeros(shape=(cf.LEN_OF_LINE,), dtype=int)
     r = [vocab_to_int.get(w, 0) for w in r]
     # 若出现生词则以0代替
     review_int[-len(r):] = r
@@ -38,10 +42,10 @@ def predict(model, review):
     :return: None
     """
 
-    model.load_state_dict(torch.load(model_dir))
+    model.load_state_dict(torch.load(cf.MODEL_PTH))
     model.eval()
     print("model loaded")
-    review_tensor = tokenize(review).to(device)
+    review_tensor = tokenize(review).to(cf.device)
     h = model.init_hidden(1)
 
     output, h = model(review_tensor.unsqueeze(0), h)
@@ -52,10 +56,8 @@ def predict(model, review):
 
 
 if __name__ == '__main__':
-    net = Net(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_DIM, N_LAYERS, BIDIRECTIONAL).to(device)
+    net = Net(VOCAB_SIZE).to(cf.device)
     print("predicting...")
-    # text = input('输入一句评论：')是
-    # 若用input接收输入会在加载model时蓝屏
-    text = '感动感动。给我加鸡腿吧！看到自己动捕的作品能得到大家的认可，真心感动！期待正式上线！'
-    # 长度不可超出100
+    # text = '感动感动。给我加鸡腿吧！看到自己动捕的作品能得到大家的认可，真心感动！期待正式上线！'
+    text = '我昨天做梦  琴肥梦 变成三百斤的虚拟主播    直接把我吓醒了'  # BV1Na4y1E7BV
     predict(net, text)

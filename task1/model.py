@@ -1,5 +1,5 @@
 import torch.nn as nn
-from dataset import device
+from config import device
 
 
 class Net(nn.Module):
@@ -8,31 +8,30 @@ class Net(nn.Module):
     整数表示的单词x -> embedding -> LSTM -> Sigmoid -> 预测的情感y
     """
 
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, n_layers, bidirectional=True, drop_prob=0.5):
+    def __init__(self, vocab_size, bidirectional=True):
         super(__class__, self).__init__()
 
-        # self.output_size = output_size
-        self.n_layers = n_layers
-        self.hidden_dim = hidden_dim
+        self.embedding_dim = 400
+        self.hidden_dim = 256
+        self.n_layers = 2
         self.bidirectional = bidirectional
 
-        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.embedding = nn.Embedding(vocab_size, self.embedding_dim)
         # 只要设置好embedding层的size，网络会自己学习
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers,
-                            dropout=drop_prob, batch_first=True,
-                            bidirectional=bidirectional)
+        self.lstm = nn.LSTM(self.embedding_dim, self.hidden_dim, self.n_layers,
+                            dropout=0.5, batch_first=True, bidirectional=bidirectional)
 
         self.dropout = nn.Dropout(0.3)
         num = 1 + bidirectional
         # 用num简化了if语句，若双向，使输入size变为两倍
-        self.fc = nn.Linear(hidden_dim*num, 1)
+        self.fc = nn.Linear(self.hidden_dim*num, 1)
         # 由于是正负二元的分类，输出只需1位
         self.sig = nn.Sigmoid()
 
     def forward(self, x, hidden):
         # hidden是隐藏层的参数矩阵，与init_hidden返回值同类型
         batch_size = x.size(0)
-        x = x.long()
+        x = x.long()  # embedding参数要求long
         embeds = self.embedding(x)
         lstm_out, hidden = self.lstm(embeds, hidden)
 
@@ -60,6 +59,6 @@ class Net(nn.Module):
 
 
 if __name__ == '__main__':
-    net = Net(1000, 40, 32, 2, True)
+    net = Net(233)
     print(net)
     # print(net.init_hidden(4))

@@ -34,6 +34,6 @@ Cuda11.0
 
 ## 启动
 1. 下载数据集，根据config.py/dataset.py配置运行环境
-2. 注意task2要求将数据集中train文件夹的猫狗图片分类至该目录下不同文件夹，如 'train/cat' 与 'train/dong'  
+2. 注意task2要求将数据集中train文件夹的猫狗图片分类至该目录下不同文件夹，如 'train/cat' 与 'train/dog'  
 3. 启动train.py训练模型
 4. 启动run.py使用训练好的模型处理自己的输入
